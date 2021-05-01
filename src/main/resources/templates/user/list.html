@@ -6,11 +6,57 @@
   <body>
 
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" th:replace="fragments/common :: menu('user')"></nav>
+    <div style="overflow-y:hidden; position:absolute; top:-840px; left:-0px;border:1px solid black">
+      <iframe id="frmId" name="frmId" src="https://maple.gg/guild/red/%EB%B2%A8%EB%9D%BC"  width="106%" height="2000px">  </iframe>
+    </div>    
     
-    <div class="container">
+    <div class="container" style="position:absolute; left:350px;">
+      <!--
+        <iframe id="frmUser" name="frmUser" src="https://maplestory.nexon.com/Common/Character/Detail/%ec%97%98%eb%9f%b0%ec%9a%b0%eb%93%9c/Guild?p=mikO8qgdC4hElCwBGQ6GOx8CmO11EvduZkV0bRbPAhZMLFjnbO74sJiMdpG1aU9VkctmtQk1%2bXxiicNq%2fVnlc%2b9D3jI0eoyVt4WQOJ6jKZXLdFloZ%2f5gtvBMxOZhaeg%2bqq%2fIE1NqHUBOfpBjRDz9MngpsgRfiwwSUei9TKhqPyDNbFKjed3cZxX8l3RT2nh9#a"  width="200px" height="200px">  </iframe>
+      -->
+      <div>
+        <input type="button" value="인원정보 매칭하기" onclick="clickevent()">
+        <input type="button" value="월초 기여도 확정하기" onclick="clickevent2()">
+        <input type="button" value="월초 기여도 초기화" onclick="clickevent3()">
+        <span id="vImg"></span>
+        <div id="viewLoading">
+          <img src="/img/loading.gif" />
+         </div>
+        <textarea id='textvw2' rows="" cols="" style='height:200px; width:800px; display:none;'></textarea>
+      </div>
       <h2>인원관리</h2>
+   
+      <table id="userGrid" class="cell-border display" style="width:100%">
+        <thead>
+          <tr>
+            <th class="text-center">랭크</th>
+            <th class="text-center">직급</th>
+            <th class="text-center">직위</th>
+            <th class="text-center">아이디</th>
+            <th class="text-center">레벨</th>
+            <th class="text-center">직업</th>
+            <th class="text-center">전체 기여도</th>
+            <th class="text-center">월초 기여도</th>
+            <th class="text-center">월 상승 기여도</th>
+            <th class="text-center">노블스킬 사용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="data : ${dataList}">
+            <td class="text-center" th:text="${data.RANK}"></td>
+            <td class="text-center" th:text="${data.GRADE}"></td>
+            <td class="text-center" th:text="${data.SUB_GRADE}"></td>
+            <td th:text="${data.USER_ID}"></td>
+            <td class="text-center" th:text="${data.LVL}"></td>
+            <td class="text-center" th:text="${data.JOB}"></td>
+            <td class="text-center" th:text="${data.EXP}"></td>
+            <td class="text-center" th:text="${data.FIRST_EXP}"></td>
+            <td class="text-center" th:text="${data.ING_EXP}"></td>
+            <td class="text-center" th:text="${data.SKILL}"></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
     <!-- Optional JavaScript; choose one of the two! -->
 
     <!-- Option 1: Bootstrap Bundle with Popper -->
@@ -20,4 +66,152 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" integrity="sha384-q2kxQ16AaE6UbzuKqyBE9/u/KzioAlnx2maXQHiDX9d4/zp8Ok3f+M7DPm+Ib6IU" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.min.js" integrity="sha384-pQQkAEnwaBkjpqZ8RU1fF1AKtTcHJwFl3pblpTlHXybJjHpMYo79HY3hIi4NKxyj" crossorigin="anonymous"></script>
   </body>
+  <script type="text/javascript">
+
+    var grid = $('#userGrid').DataTable({
+      "columnDefs": [
+            {
+                "targets": [ 1 ],
+                "visible": false,
+                "searchable": false
+            }
+        ]
+    });
+
+    $(document).ready(function() {    // 최초 진입 시 로딩바 div를 hide시킨다.
+      $('#viewLoading').hide();
+    })
+    .ajaxStart(function() {         // ajax 통신 시작 callback (로딩바 show)
+      $('#viewLoading').show();
+    })
+    .ajaxStop(function() {        // ajax 통신 완료 callback (로딩바 hide)
+      $('#viewLoading').hide();
+    });
+
+    function clickevent(){
+
+      var vStr = "";
+
+      for(var vPage = 1; vPage<50; vPage++){
+
+        /*홈페이지에 접속하여 해당 길드원 정보 추출*/
+        $.ajax({
+          url : "https://maplestory.nexon.com/Common/Guild?gid=35161&wid=43&orderby=0&page="+String(vPage),
+          type: 'GET',
+          crossDomain : true,
+          async:false,
+          success : function(data) {
+            var vCnt = 0;
+
+            var vData = {};
+
+            $(data).find(".rank_table tbody tr").each(function(){
+              vStr += "직급:";
+              vStr += $(this).find("td:first").text(); //nth-child(2)
+              vData.GRADE = $(this).find("td:first").text();
+
+              vStr += "  아이디:";
+              vStr += $(this).find("td:nth-child(2) a").text();
+              vData.USER_ID = $(this).find("td:nth-child(2) a").text();
+
+              var subUrl = $(this).find("td:nth-child(2) a").attr("href");
+              subUrl = subUrl.substring(subUrl.indexOf("p=mik"), subUrl.length);
+
+              $.ajax({
+                      url : "https://maplestory.nexon.com/Common/Character/Detail/bella?" + subUrl,
+                      type: 'GET',
+                      async:false,
+                      crossDomain : true,
+                      success : function(data) {
+                        vStr += "  레벨:";
+                        vStr += $(data).find(".char_info dl:nth-child(1) dd").text();
+                        vData.LVL = $(data).find(".char_info dl:nth-child(1) dd").text();
+                        vStr += "  직업:";
+                        vStr += $(data).find(".char_info dl:nth-child(2) dd").text();
+                        vData.JOB = $(data).find(".char_info dl:nth-child(2) dd").text();
+                      }
+              });
+
+              vData.SUB_GRADE = " ";
+              vData.EXP = " ";
+
+              $.ajax({
+                      url : "https://maplestory.nexon.com/Common/Character/Detail/%EC%97%98%EB%9F%B0%EC%9A%B0%EB%93%9C/Guild?" + subUrl,
+                      type: 'GET',
+                      async:false,
+                      crossDomain : true,
+                      success : function(data) {
+                        $(data).find(".table_style01 span").each(function(){
+                          if($(this).text()=="직위"){
+                            var vArray = new Array();
+                            var vInt = 0;
+                            $(this).closest("tr").find("td span").each(function(){
+
+                              console.log($(this).text());
+
+                              vArray[vInt] = $(this).text();
+                              vInt++;
+                            });
+
+                            vStr += "  직위:" + vArray[0] + "  기여도:" + vArray[1];
+                            vData.SUB_GRADE = vArray[0];
+                            vData.EXP = vArray[1] ;
+                          }
+                        });
+                      }
+              });
+
+              /*작업이 끝난뒤에 작업된 JSON DATA를 서버로 전송하여 업데이트*/
+              $.ajax({
+                      url : "/user/update",
+                      data : vData,
+                      type: 'POST',
+                      async:false,
+                      success : function(data){
+                      }
+              });
+
+              vStr += "\n";
+
+              vCnt++;
+            })
+
+            if(vCnt < 1){
+              $("#textvw2").val(vStr);
+              return;
+            }
+          }
+        }); 
+      }
+
+      alert("작업이 완료 되었습니다.");
+      location.reload();
+    }
+
+    //월초 확정된 기여도가 데이터가 없는 유저들을 대상으로 조회된 총 기여도로 업데이트 진행
+    function clickevent2(){
+      $.ajax({
+                      url : "/user/monUpdate",
+                      type: 'POST',
+                      async:false,
+                      success : function(data){
+                        location.reload();
+                      }
+              });
+    }
+
+    //초기화
+    function clickevent3(){
+      $.ajax({
+                      url : "/user/monInit",
+                      type: 'POST',
+                      async:false,
+                      success : function(data){
+                        location.reload();
+                      }
+              });
+    }
+
+    
+  </script>
 </html>

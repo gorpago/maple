@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.maple.bella.contorller.userListDao">
+    <select id="selectList" parameterType="com.maple.bella.contorller.userList"  resultType="com.maple.bella.contorller.userList">
+        SELECT CASE WHEN GRADE = '마스터' THEN '1'
+                    WHEN GRADE = '부마스터' THEN '2'
+                    ELSE '3' END AS RANK,
+               USER_ID,
+               GRADE,
+               SUB_GRADE,
+               LVL,
+               JOB,
+               TOWER,
+               MEMBER_CHK,
+               SKILL,
+               FN_COMMA(NVL(EXP, 0)) AS EXP,
+               FN_COMMA(NVL(FIRST_EXP, 0)) AS FIRST_EXP,
+               FN_COMMA(CASE WHEN NVL(EXP, 0) = 0 OR NVL(FIRST_EXP, 0) = 0 THEN 0
+                        ELSE NVL(EXP, 0) - NVL(FIRST_EXP, 0) END) AS ING_EXP
+          FROM MT_BELLA_MEMBER
+    </select>
+
+    <update id="monUpdate">
+        UPDATE MT_BELLA_MEMBER
+           SET FIRST_EXP = EXP
+         WHERE NVL(FIRST_EXP, 0) = 0
+           AND NVL(EXP, 0) > 0
+    </update>
+
+    <update id="monInit">
+        UPDATE MT_BELLA_MEMBER
+        SET FIRST_EXP = 0
+    </update>
+
+    <update id="update" parameterType="com.maple.bella.contorller.userList">
+        MERGE INTO MT_BELLA_MEMBER A
+        USING (
+            SELECT
+                #{USER_ID} AS USER_ID
+            <if test="GRADE != null and GRADE != ''">
+                ,#{GRADE} AS GRADE
+            </if>
+            <if test="LVL != null and LVL != ''">
+                ,#{LVL} AS LVL
+            </if>
+            <if test="JOB != null and JOB != ''">
+                ,#{JOB} AS JOB
+            </if>
+            <if test="SKILL != null and SKILL != ''">
+                ,#{SKILL} AS SKILL
+            </if>
+            <if test="EXP != null and EXP != ''">
+                ,REPLACE(#{EXP}, ',', '') AS EXP
+            </if>
+            <if test="SUB_GRADE != null and SUB_GRADE != ''">
+                ,#{SUB_GRADE} AS SUB_GRADE
+            </if>
+            FROM DUAL
+        ) B ON(
+            A.USER_ID  = B.USER_ID
+        )
+        WHEN MATCHED THEN
+            UPDATE
+            SET UPDATE_DT = SYSDATE
+            <if test="GRADE != null and GRADE != ''">
+                ,A.GRADE = B.GRADE
+            </if>
+            <if test="LVL != null and LVL != ''">
+                ,A.LVL = B.LVL
+            </if>
+            <if test="JOB != null and JOB != ''">
+                ,A.JOB = B.JOB
+            </if>
+            <if test="EXP != null and EXP != ''">
+                ,A.EXP = B.EXP
+            </if>
+            <if test="SUB_GRADE != null and SUB_GRADE != ''">
+                ,A.SUB_GRADE = B.SUB_GRADE
+                ,A.SKILL = CASE WHEN B.SUB_GRADE = ' ' THEN A.SKILL
+                                WHEN B.SUB_GRADE NOT IN('달팽이') THEN 'Y'
+                                ELSE 'N' END
+            </if>
+        WHEN NOT MATCHED THEN
+            INSERT (
+                A.INSERT_DT,
+                A.USER_ID
+                <if test="GRADE != null and GRADE != ''">
+                    ,A.GRADE
+                </if>
+                <if test="LVL != null and LVL != ''">
+                    ,A.LVL
+                </if>
+                <if test="JOB != null and JOB != ''">
+                    ,A.JOB
+                </if>
+                <if test="EXP != null and EXP != ''">
+                    ,A.EXP
+                </if>
+                <if test="SUB_GRADE != null and SUB_GRADE != ''">
+                    ,A.SUB_GRADE
+                </if>
+            )VALUES(
+                SYSDATE,
+                B.USER_ID
+                <if test="GRADE != null and GRADE != ''">
+                    ,B.GRADE
+                </if>
+                <if test="LVL != null and LVL != ''">
+                    ,B.LVL
+                </if>
+                <if test="JOB != null and JOB != ''">
+                    ,B.JOB
+                </if>
+                <if test="SKILL != null and SKILL != ''">
+                    ,B.SKILL
+                </if>
+                <if test="EXP != null and EXP != ''">
+                    ,B.EXP
+                </if>
+                <if test="SUB_GRADE != null and SUB_GRADE != ''">
+                    ,B.SUB_GRADE
+                </if>
+            )
+    </update>
+</mapper>

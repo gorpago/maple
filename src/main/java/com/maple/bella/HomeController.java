@@ -1,4 +1,4 @@
-package com.maple.bella.controller;
+package com.maple.bella;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

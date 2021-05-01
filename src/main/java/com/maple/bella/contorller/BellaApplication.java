@@ -1,4 +1,4 @@
-package com.maple.bella;
+package com.maple.bella.contorller;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
