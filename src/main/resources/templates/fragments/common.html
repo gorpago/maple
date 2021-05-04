@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
   <head th:fragment="head(title)">
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +15,7 @@
     <link href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="starter-template.css" th:href="@{/starter-template.css}" rel="stylesheet">
+    <link href="starter-template.css" th:href="@{/css/starter-template.css}" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 
@@ -40,9 +44,29 @@
                 <a class="nav-link sr-only" href="#" th:href="@{/}"><span th:classappend="${menu} == 'home'? 'menuPoint'">홈</span></a>
               </li>
               <li class="nav-item" th:classappend="${menu} == 'user'? 'active'">
-                <a class="nav-link current" href="#" th:href="@{/user/list}"><span th:classappend="${menu} == 'user'? 'menuPoint'">길드원관리</span></a>
+                <a class="nav-link current" href="#" th:href="@{/user/list}"><span th:classappend="${menu} == 'user'? 'menuPoint'">길드원정보</span></a>
               </li>
+              <th:block sec:authorize="hasRole('ROLE_ADMIN')" >
+                <li class="nav-item" th:classappend="${menu} == 'play'? 'active'">
+                  <a class="nav-link current" href="#" th:href="@{/play/list}"><span th:classappend="${menu} == 'play'? 'menuPoint'">수로관리</span></a>
+                </li>
+              </th:block>
+              </ul>
             </ul>
+
+            <th:block sec:authorize="!isAuthenticated()">
+            <form class="d-flex" th:action="@{/account/login}">
+              <button class="btn btn-outline-success" type="submit">login</button>
+            </form>   
+            <form class="d-flex" th:action="@{/account/register}">
+              <button class="btn btn-outline-success" type="submit">join</button>
+            </form>   
+            </div>
+            <th:block sec:authorize="isAuthenticated()">         
+              <form class="d-flex" th:action="@{/logout}" method="POST" >
+                <button class="btn btn-outline-success" type="submit">logout</button>
+              </form>
+            </th:block>
           </div>
         </div>
       </nav>

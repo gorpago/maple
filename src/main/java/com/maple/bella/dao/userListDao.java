@@ -1,5 +1,6 @@
-package com.maple.bella.contorller;
+package com.maple.bella.dao;
 
+import com.maple.bella.model.userList;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

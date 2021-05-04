@@ -15,9 +15,11 @@
         <iframe id="frmUser" name="frmUser" src="https://maplestory.nexon.com/Common/Character/Detail/%ec%97%98%eb%9f%b0%ec%9a%b0%eb%93%9c/Guild?p=mikO8qgdC4hElCwBGQ6GOx8CmO11EvduZkV0bRbPAhZMLFjnbO74sJiMdpG1aU9VkctmtQk1%2bXxiicNq%2fVnlc%2b9D3jI0eoyVt4WQOJ6jKZXLdFloZ%2f5gtvBMxOZhaeg%2bqq%2fIE1NqHUBOfpBjRDz9MngpsgRfiwwSUei9TKhqPyDNbFKjed3cZxX8l3RT2nh9#a"  width="200px" height="200px">  </iframe>
       -->
       <div>
-        <input type="button" value="인원정보 매칭하기" onclick="clickevent()">
-        <input type="button" value="월초 기여도 확정하기" onclick="clickevent2()">
-        <input type="button" value="월초 기여도 초기화" onclick="clickevent3()">
+        <th:block sec:authorize="hasRole('ROLE_ADMIN')" >
+          <input type="button" value="인원정보 매칭하기" onclick="clickevent()">
+          <input type="button" value="월초 기여도 확정하기" onclick="clickevent2()">
+          <!--<input type="button" value="월초 기여도 초기화" onclick="clickevent3()">-->
+        </th:block>
         <span id="vImg"></span>
         <div id="viewLoading">
           <img src="/img/loading.gif" />
@@ -26,7 +28,7 @@
       </div>
       <h2>인원관리</h2>
    
-      <table id="userGrid" class="cell-border display" style="width:100%">
+      <table id="userGrid" class="display" style="width:100%">
         <thead>
           <tr>
             <th class="text-center">랭크</th>
@@ -68,15 +70,14 @@
   </body>
   <script type="text/javascript">
 
-    var grid = $('#userGrid').DataTable({
-      "columnDefs": [
-            {
-                "targets": [ 1 ],
-                "visible": false,
-                "searchable": false
-            }
-        ]
-    });
+    var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+
+    var grid = $('#userGrid').DataTable( {
+        "scrollY": "650px",
+        "select:": true,
+        "paging": false
+    } );
 
     $(document).ready(function() {    // 최초 진입 시 로딩바 div를 hide시킨다.
       $('#viewLoading').hide();
@@ -100,6 +101,11 @@
           type: 'GET',
           crossDomain : true,
           async:false,
+          beforeSend : function(xhr){
+            xhr.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+            xhr.setRequestHeader("Access-Control-Allow-Origin", "https://maplestory.nexon.com");
+            xhr.setRequestHeader("Access-Control-Allow-Methods","OPTIONS,POST,GET");
+          },
           success : function(data) {
             var vCnt = 0;
 
@@ -122,6 +128,11 @@
                       type: 'GET',
                       async:false,
                       crossDomain : true,
+                      beforeSend : function(xhr){
+                        xhr.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+                        xhr.setRequestHeader("Access-Control-Allow-Origin", "https://maplestory.nexon.com");
+                        xhr.setRequestHeader("Access-Control-Allow-Methods","OPTIONS,POST,GET");
+                      },
                       success : function(data) {
                         vStr += "  레벨:";
                         vStr += $(data).find(".char_info dl:nth-child(1) dd").text();
@@ -134,12 +145,16 @@
 
               vData.SUB_GRADE = " ";
               vData.EXP = " ";
-
               $.ajax({
                       url : "https://maplestory.nexon.com/Common/Character/Detail/%EC%97%98%EB%9F%B0%EC%9A%B0%EB%93%9C/Guild?" + subUrl,
                       type: 'GET',
                       async:false,
                       crossDomain : true,
+                      beforeSend : function(xhr){
+                        xhr.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+                        xhr.setRequestHeader("Access-Control-Allow-Origin", "https://maplestory.nexon.com");
+                        xhr.setRequestHeader("Access-Control-Allow-Methods","OPTIONS,POST,GET");
+                      },
                       success : function(data) {
                         $(data).find(".table_style01 span").each(function(){
                           if($(this).text()=="직위"){
@@ -166,6 +181,10 @@
                       url : "/user/update",
                       data : vData,
                       type: 'POST',
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
                       async:false,
                       success : function(data){
                       }
@@ -194,6 +213,10 @@
                       url : "/user/monUpdate",
                       type: 'POST',
                       async:false,
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
                       success : function(data){
                         location.reload();
                       }
@@ -206,6 +229,10 @@
                       url : "/user/monInit",
                       type: 'POST',
                       async:false,
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
                       success : function(data){
                         location.reload();
                       }

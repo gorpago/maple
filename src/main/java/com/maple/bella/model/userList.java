@@ -1,4 +1,4 @@
-package com.maple.bella.contorller;
+package com.maple.bella.model;
 
 import lombok.Data;
 

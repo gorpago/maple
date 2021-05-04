@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.maple.bella.dao.userDao">
+    <select id="selectList" parameterType="com.maple.bella.model.user"  resultType="com.maple.bella.model.user">
+        SELECT CASE WHEN GRADE = '마스터' THEN '1'
+                    WHEN GRADE = '부마스터' THEN '2'
+                    ELSE '3' END AS RANK,
+               USER_ID,
+               GRADE,
+               SUB_GRADE,
+               LVL,
+               JOB,
+               TOWER,
+               MEMBER_CHK,
+               SKILL,
+               FN_COMMA(NVL(EXP, 0)) AS EXP,
+               FN_COMMA(NVL(FIRST_EXP, 0)) AS FIRST_EXP,
+               FN_COMMA(CASE WHEN NVL(EXP, 0) = 0 OR NVL(FIRST_EXP, 0) = 0 THEN 0
+                        ELSE NVL(EXP, 0) - NVL(FIRST_EXP, 0) END) AS ING_EXP
+          FROM MT_BELLA_MEMBER
+    </select>
+
+    <insert id="insertUser" parameterType="com.maple.bella.model.user">
+        INSERT INTO MT_USER(ID, PASSWORD, ENABLED)
+        VALUES(
+            #{ID},
+            #{PASSWORD},
+            'TRUE'
+        )
+    </insert>
+
+    <insert id="insertRole" parameterType="com.maple.bella.model.user">
+        INSERT INTO MT_ROLE(ID, ROLE)
+        VALUES(
+        #{ID},
+        'ROLE_USER'
+        )
+    </insert>
+
+</mapper>

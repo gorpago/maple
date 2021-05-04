@@ -1,0 +1,111 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments/common :: head('수로관리')">
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" th:replace="fragments/common :: menu('play')"></nav>
+    <div style="overflow-y:hidden; position:absolute; top:-840px; left:-0px;border:1px solid black">
+      <iframe id="frmId" name="frmId" src="https://maple.gg/guild/red/%EB%B2%A8%EB%9D%BC"  width="106%" height="2000px">  </iframe>
+    </div>    
+    
+    <div class="container" style="position:absolute; left:350px;">
+      <!--
+        <iframe id="frmUser" name="frmUser" src="https://maplestory.nexon.com/Common/Character/Detail/%ec%97%98%eb%9f%b0%ec%9a%b0%eb%93%9c/Guild?p=mikO8qgdC4hElCwBGQ6GOx8CmO11EvduZkV0bRbPAhZMLFjnbO74sJiMdpG1aU9VkctmtQk1%2bXxiicNq%2fVnlc%2b9D3jI0eoyVt4WQOJ6jKZXLdFloZ%2f5gtvBMxOZhaeg%2bqq%2fIE1NqHUBOfpBjRDz9MngpsgRfiwwSUei9TKhqPyDNbFKjed3cZxX8l3RT2nh9#a"  width="200px" height="200px">  </iframe>
+      -->
+      <h2>수로참여자</h2>
+      <div>
+          <input type="button" value="수로참여자 등록" onclick="clickevent()">
+          <textarea id='textarea1' name="PLAY_LIST" rows="" cols="" style='height:60px; width:100%;'></textarea>
+        <h2>노블스킬 사용 대상자</h2>
+          <textarea id='textarea2' rows="" cols="" style='height:60px; width:100%; background-color:#BDBDBD;' readonly="true"></textarea>
+        <h2>노블스킬 제외 대상자</h2>
+          <textarea id='textarea3'  rows="" cols="" style='height:60px; width:100%; background-color:#BDBDBD;' readonly=></textarea>
+      </div>
+      <h2>참여 현황</h2>
+      <div id="row"  class="row">
+
+        <div class="col-sm-6 sections" style="height:100%;">
+          <table id="playGrid" class="cell-border display" style="width:100%; float:left;">
+            <thead>
+              <tr>
+                <th class="text-center">참여일시</th>
+                <th class="text-center">전체인원</th>
+                <th class="text-center">참여인원</th>
+                <th class="text-center">월참여조회</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="data : ${mtList}">
+                <td class="text-center" th:text="${data.PLAY_DT}"></td>
+                <td class="text-center" th:text="${data.ALL_CNT}"></td>
+                <td class="text-center" th:text="${data.USE_CNT}"></td>
+                <td class="text-center"><a href="#" onclick="fnSub(this);" th:id="${data.PLAY_DT}">조회</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-sm-6 sections" style="height:100%;">
+          <table id="playerGrid" class="cell-border display" style="width:100%; float:left;">
+            <thead>
+              <tr>
+                <th class="text-center">선택 월</th>
+                <th class="text-center">아이디</th>
+                <th class="text-center">월 참여</th>
+                <th class="text-center">월 미참여</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="data : ${htList}">
+                <td class="text-center" th:text="${data.PLAY_DT}"></td>
+                <td class="text-center" th:text="${data.ID}"></td>
+                <td class="text-center" th:text="${data.USE_CNT}">
+                <td class="text-center" th:text="${data.BAN_CNT}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+
+    var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+
+    var grid = $('#playGrid').DataTable();
+    var grid2 = $('#playerGrid').DataTable();
+
+    function clickevent(){
+
+      var vStr = "";
+
+      $.ajax({
+        url : "/play/playerUpdqte",
+        type: 'POST',
+        data: {PLAY_LIST : $("#textarea1").val()},
+        async:false,
+        beforeSend : function(xhr)
+        {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+            xhr.setRequestHeader(header, token);
+        },
+        success : function(data){
+          alert("작업이 완료1 되었습니다.");
+          console.log(data.useList);
+          console.log(data.banList);
+          $("#textarea2").val(data.useList.use_LIST);
+          $("#textarea3").val(data.banList.ban_LIST);
+
+          grid.row().remove();
+          grid.add()
+        }
+      });
+    }
+
+    function fnSub(obj){
+      alert($(obj).attr("id"));
+    }
+    
+  </script>
+</html>

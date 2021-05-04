@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.maple.bella.contorller.userListDao">
-    <select id="selectList" parameterType="com.maple.bella.contorller.userList"  resultType="com.maple.bella.contorller.userList">
+<mapper namespace="com.maple.bella.dao.userListDao">
+    <select id="selectList" parameterType="com.maple.bella.model.userList"  resultType="com.maple.bella.model.userList">
         SELECT CASE WHEN GRADE = '마스터' THEN '1'
                     WHEN GRADE = '부마스터' THEN '2'
                     ELSE '3' END AS RANK,
@@ -33,7 +33,7 @@
         SET FIRST_EXP = 0
     </update>
 
-    <update id="update" parameterType="com.maple.bella.contorller.userList">
+    <update id="update" parameterType="com.maple.bella.model.userList">
         MERGE INTO MT_BELLA_MEMBER A
         USING (
             SELECT
@@ -42,7 +42,7 @@
                 ,#{GRADE} AS GRADE
             </if>
             <if test="LVL != null and LVL != ''">
-                ,#{LVL} AS LVL
+                ,REPLACE(#{LVL}, 'LV.', '') AS LVL
             </if>
             <if test="JOB != null and JOB != ''">
                 ,#{JOB} AS JOB
@@ -73,10 +73,10 @@
                 ,A.JOB = B.JOB
             </if>
             <if test="EXP != null and EXP != ''">
-                ,A.EXP = B.EXP
+                ,A.EXP = CASE WHEN B.EXP = ' ' OR B.EXP = 0 THEN A.EXP ELSE DECODE(B.EXP, ' ', 0, B.EXP) END
             </if>
             <if test="SUB_GRADE != null and SUB_GRADE != ''">
-                ,A.SUB_GRADE = B.SUB_GRADE
+                ,A.SUB_GRADE = CASE WHEN B.SUB_GRADE = ' ' THEN A.SUB_GRADE ELSE B.SUB_GRADE END
                 ,A.SKILL = CASE WHEN B.SUB_GRADE = ' ' THEN A.SKILL
                                 WHEN B.SUB_GRADE NOT IN('달팽이') THEN 'Y'
                                 ELSE 'N' END
