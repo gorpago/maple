@@ -14,34 +14,44 @@
           FROM mt_bella_member A,
                (select USER_ID, LISTAGG(SUB_ID, ',') AS SUB_ID_LIST FROM ht_bella_member GROUP BY USER_ID) B
          WHERE A.USER_ID = B.USER_ID(+)
-           AND A.GRADE NOT IN('마스터', '부마스터')
-           AND A.SUB_GRADE NOT IN('노말루시드')
+           AND A.SUB_GRADE IN('달팽이')
            AND A.USER_ID IN (SELECT ID FROM TEMP)
            AND A.USER_ID IN (SELECT TRIM(C.USER_ID) FROM NON_MEMBER C)
            AND A.USER_ID IN (
                 SELECT SUB_ID FROM HT_BELLA_MEMBER HT WHERE HT.USER_ID IN(SELECT ID FROM TEMP))
-           AND A.SKILL = 'N'
     </select>
 
     <select id="banList" parameterType="com.maple.bella.model.play"  resultType="com.maple.bella.model.play">
         WITH TEMP AS (
-        SELECT TRIM(TXT) AS ID
-          FROM (SELECT distinct regexp_substr(A.TXT, '[^ / ]+', 1, LEVEL) TXT
-                  FROM (SELECT #{PLAY_LIST} TXT FROM dual) A
-               CONNECT BY LEVEL  <![CDATA[<=]]>  length(regexp_replace(A.TXT, '[^ / ]+',''))+1)
-                 WHERE TXT IS NOT NULL
+            SELECT TRIM(TXT) AS ID
+              FROM (SELECT distinct regexp_substr(A.TXT, '[^ / ]+', 1, LEVEL) TXT
+                      FROM (SELECT #{PLAY_LIST} TXT FROM dual) A
+                   CONNECT BY LEVEL  <![CDATA[<=]]>  length(regexp_replace(A.TXT, '[^ / ]+',''))+1)
+                     WHERE TXT IS NOT NULL
         )
         SELECT NVL(LISTAGG(A.USER_ID, ', '), '대상자 없음') AS BAN_LIST, COUNT(*) AS BAN_CNT
           FROM mt_bella_member A,
                (select USER_ID, LISTAGG(SUB_ID, ',') AS SUB_ID_LIST FROM ht_bella_member GROUP BY USER_ID) B
          WHERE A.USER_ID = B.USER_ID(+)
-           AND A.GRADE NOT IN('마스터', '부마스터')
-           AND A.SUB_GRADE NOT IN('노말루시드')
+           AND A.SUB_GRADE IN('카루타')
            AND A.USER_ID NOT IN(SELECT ID FROM TEMP)
            AND A.USER_ID NOT IN (SELECT TRIM(C.USER_ID) FROM NON_MEMBER C)
            AND A.USER_ID NOT IN (
-           SELECT SUB_ID FROM HT_BELLA_MEMBER HT WHERE HT.USER_ID IN(SELECT ID FROM TEMP))
-           AND A.SKILL = 'Y'
+                                    SELECT SUB_ID FROM HT_BELLA_MEMBER HT WHERE HT.USER_ID IN(SELECT ID FROM TEMP)
+                                    UNION ALL
+                                    SELECT HT.SUB_ID FROM MT_BELLA_MEMBER MT, HT_BELLA_MEMBER HT WHERE MT.USER_ID = HT.USER_ID AND MT.SUB_GRADE IN('검은마법사','하드듄켈','노말루시드')
+                                )
+           AND (
+                SELECT SUM(CASE WHEN B.ID IS NULL THEN 1 ELSE 0 END) AS BAN_CNT
+                  FROM mt_bella_member A,
+                       (SELECT *
+                          FROM HT_PLAY
+                         WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')) B
+                 WHERE A.USER_ID = B.ID(+)
+                   AND A.USER_ID NOT IN(
+                                        SELECT SUB_ID FROM HT_BELLA_MEMBER
+                                       )
+            ) > 1
     </select>
 
     <insert id="mtInsert" parameterType="com.maple.bella.model.play">
@@ -103,13 +113,15 @@
     </select>
 
     <select id="htList" parameterType="com.maple.bella.model.play"  resultType="com.maple.bella.model.play">
-        SELECT SUBSTR(#{PLAY_dT}, 1, 7) AS PLAY_DT,
+        SELECT SUBSTR(#{PLAY_DT}, 1, 7) AS PLAY_DT,
                A.USER_ID AS ID,
-               SUM(CASE WHEN B.ID IS NOT NULL THEN 1 ELSE 0) AS USE_CNT,
-               SUM(CASE WHEN B.ID IS NULL THEN 1 ELSE 0) AS BAN_CNT
-          FROM mt_bella_member A,  HT_PLAY B
+               SUM(CASE WHEN B.ID IS NOT NULL THEN 1 ELSE 0 END) AS USE_CNT,
+               SUM(CASE WHEN B.ID IS NULL THEN 1 ELSE 0 END) AS BAN_CNT
+          FROM mt_bella_member A, (SELECT * FROM  HT_PLAY WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = SUBSTR(#{PLAY_DT}, 1, 7)) B
          WHERE A.USER_ID = B.ID(+)
-           AND TO_CHAR(B.PLAY_DT, 'YYYY-MM') = SUBSTR(#{PLAY_dT}, 1, 7)
+           AND A.USER_ID NOT IN(
+              SELECT SUB_ID FROM HT_BELLA_MEMBER
+           )
          GROUP BY A.USER_ID
     </select>
 </mapper>

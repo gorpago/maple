@@ -48,9 +48,19 @@
                   <a class="nav-link current" href="#" th:href="@{/play/list}"><span th:classappend="${menu} == 'play'? 'menuPoint'">수로관리</span></a>
                 </li>
               </th:block>
+              <th:block sec:authorize="hasRole('ROLE_ADMIN')" >
+                <li class="nav-item" th:classappend="${menu} == 'playList'? 'active'">
+                  <a class="nav-link current" href="#" th:href="@{/playList/list}"><span th:classappend="${menu} == 'playList'? 'menuPoint'">수로참여현황</span></a>
+                </li>
+              </th:block>
               <th:block sec:authorize="hasRole('ROLE_SUPER')" >
                 <li class="nav-item" th:classappend="${menu} == 'play'? 'active'">
                   <a class="nav-link current" href="#" th:href="@{/play/list}"><span th:classappend="${menu} == 'play'? 'menuPoint'">수로관리</span></a>
+                </li>
+              </th:block>
+              <th:block sec:authorize="hasRole('ROLE_SUPER')" >
+                <li class="nav-item" th:classappend="${menu} == 'playList'? 'active'">
+                  <a class="nav-link current" href="#" th:href="@{/playList/list}"><span th:classappend="${menu} == 'playList'? 'menuPoint'">수로참여현황</span></a>
                 </li>
               </th:block>
               <th:block sec:authorize="hasRole('ROLE_SUPER')" >
