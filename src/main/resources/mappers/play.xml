@@ -57,13 +57,13 @@
     <insert id="mtInsert" parameterType="com.maple.bella.model.play">
         MERGE INTO MT_PLAY A
         USING (
-            SELECT TO_CHAR(SYSDATE, 'YYYY-MM-YY') AS PLAY_DT,
+            SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD') AS PLAY_DT,
                    (SELECT COUNT(*) FROM HT_PLAY WHERE TO_CHAR(PLAY_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')) AS USE_CNT,
                    #{BAN_CNT} AS BAN_CNT,
                    #{PLAY_LIST} AS PLAY_LIST
               FROM DUAL
         ) B ON (
-            TO_CHAR(A.PLAY_DT, 'YYYY-MM-YY') = B.PLAY_DT
+            TO_CHAR(A.PLAY_DT, 'YYYY-MM-DD') = B.PLAY_DT
         )
         WHEN MATCHED THEN
             UPDATE
