@@ -1,8 +1,15 @@
 body {
     padding-top: 5rem;
+
   }
+
+html, body {height:100%;}
 
 .menuPoint{
   font-weight:bold;
   color:white;
+}
+
+.container{
+  background: rgb(69, 64, 88);
 }

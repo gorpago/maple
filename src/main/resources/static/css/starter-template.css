@@ -6,3 +6,7 @@ body {
   font-weight:bold;
   color:white;
 }
+
+.dataTable tbody tr{
+  cursor: pointer;
+}

@@ -6,10 +6,7 @@
   <body>
 
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" th:replace="fragments/common :: menu('play')"></nav>
-    <div style="overflow-y:hidden; position:absolute; top:-840px; left:-0px;border:1px solid black">
-      <iframe id="frmId" name="frmId" src="https://maple.gg/guild/red/%EB%B2%A8%EB%9D%BC"  width="106%" height="2000px">  </iframe>
-    </div>    
-    
+
     <div class="container" style="position:absolute; left:350px;">
       <!--
         <iframe id="frmUser" name="frmUser" src="https://maplestory.nexon.com/Common/Character/Detail/%ec%97%98%eb%9f%b0%ec%9a%b0%eb%93%9c/Guild?p=mikO8qgdC4hElCwBGQ6GOx8CmO11EvduZkV0bRbPAhZMLFjnbO74sJiMdpG1aU9VkctmtQk1%2bXxiicNq%2fVnlc%2b9D3jI0eoyVt4WQOJ6jKZXLdFloZ%2f5gtvBMxOZhaeg%2bqq%2fIE1NqHUBOfpBjRDz9MngpsgRfiwwSUei9TKhqPyDNbFKjed3cZxX8l3RT2nh9#a"  width="200px" height="200px">  </iframe>
@@ -77,6 +74,39 @@
     var grid = $('#playGrid').DataTable();
     var grid2 = $('#playerGrid').DataTable();
 
+
+
+    function userList(){
+      /*홈페이지에 접속하여 해당 길드원 정보 추출*/
+      $.ajax({
+        url : "https://maplestory.nexon.com/Common/Guild?gid=35161&wid=43&orderby=0&page="+String(vPage),
+        type: 'GET',
+        crossDomain : true,
+        async:false,
+        success : function(data) {
+          var vCnt = 0;
+          var vData = {};
+          $(data).find(".rank_table tbody tr").each(function(){
+            
+            var subUrl = $(this).find("td:nth-child(2) a").attr("href");
+            subUrl = subUrl.substring(subUrl.indexOf("p=mik"), subUrl.length);
+
+            $.ajax({
+              url : "https://maplestory.nexon.com/Common/Character/Detail/%EC%97%98%EB%9F%B0%EC%9A%B0%EB%93%9C/GuildMembers?" + subUrl,
+              type: 'GET',
+              async:false,
+              crossDomain : true,
+              success : function(data) {
+                $(data).find(".rank_table tbody tr").each(function(){
+                  
+                });
+              }
+            });
+          });
+        }
+      });
+    }
+
     function clickevent(){
 
       var vStr = "";
@@ -91,7 +121,7 @@
             xhr.setRequestHeader(header, token);
         },
         success : function(data){
-          alert("작업이 완료1 되었습니다.");
+          alert("작업이 완료 되었습니다.");
           console.log(data.useList);
           console.log(data.banList);
           $("#textarea2").val(data.useList.use_LIST);

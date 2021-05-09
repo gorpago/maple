@@ -1,0 +1,211 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments/common :: head('관리자메뉴')">
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" th:replace="fragments/common :: menu('superAdmin')"></nav>  
+    
+    <div class="container" style="position:absolute; left:350px;">
+      <div>
+          <input type="button" value="인원정보 매칭하기" onclick="clickevent()">
+          <input type="button" value="월초 기여도 확정하기" onclick="clickevent2()">
+          <!--<input type="button" value="월초 기여도 초기화" onclick="clickevent3()">-->
+          <input type="button" id="btnOk" value="인원정보 자동실행 시작 (5분 간격)" onclick="clickevent4(true)" style="margin-left:10px;">
+          <input type="button" id="btnCan" value="자동실행 종료" onclick="clickevent4(false)" style="margin-left:10px;">
+          <span id="news"></span>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+
+    var token = $("meta[name='_csrf']").attr("content");
+		var header = $("meta[name='_csrf_header']").attr("content");
+
+    $("#btnOk").attr("disabled", false); //설정
+    $("#btnCan").attr("disabled", true); //해제
+    var vFlag = false;
+
+    function clickevent(){
+
+      var vStr = "";
+
+      for(var vPage = 1; vPage<50; vPage++){
+
+        /*홈페이지에 접속하여 해당 길드원 정보 추출*/
+        $.ajax({
+          url : "https://maplestory.nexon.com/Common/Guild?gid=35161&wid=43&orderby=0&page="+String(vPage),
+          type: 'GET',
+          crossDomain : true,
+          async:false,
+          success : function(data) {
+            var vCnt = 0;
+
+            var vData = {};
+
+            $(data).find(".rank_table tbody tr").each(function(){
+              vData.GRADE = $(this).find("td:first").text();
+              vData.USER_ID = $(this).find("td:nth-child(2) a").text();
+
+              var subUrl = $(this).find("td:nth-child(2) a").attr("href");
+              subUrl = subUrl.substring(subUrl.indexOf("p=mik"), subUrl.length);
+
+              $.ajax({
+                      url : "https://maplestory.nexon.com/Common/Character/Detail/bella?" + subUrl,
+                      type: 'GET',
+                      async:false,
+                      crossDomain : true,
+                      success : function(data) {
+                        vData.LVL = $(data).find(".char_info dl:nth-child(1) dd").text();
+                        vData.JOB = $(data).find(".char_info dl:nth-child(2) dd").text();
+                      }
+              });
+
+              vData.SUB_GRADE = " ";
+              vData.EXP = " ";
+              $.ajax({
+                      url : "https://maplestory.nexon.com/Common/Character/Detail/%EC%97%98%EB%9F%B0%EC%9A%B0%EB%93%9C/Guild?" + subUrl,
+                      type: 'GET',
+                      async:false,
+                      crossDomain : true,
+                      success : function(data) {
+                        $(data).find(".table_style01 span").each(function(){
+                          if($(this).text()=="직위"){
+                            var vArray = new Array();
+                            var vInt = 0;
+                            $(this).closest("tr").find("td span").each(function(){
+                              vArray[vInt] = $(this).text();
+                              vInt++;
+                            });
+                            vData.SUB_GRADE = vArray[0];
+                            vData.EXP = vArray[1] ;
+                          }
+                        });
+                      }
+              });
+
+              /*작업이 끝난뒤에 작업된 JSON DATA를 서버로 전송하여 업데이트*/
+              $.ajax({
+                      url : "/user/update",
+                      data : vData,
+                      type: 'POST',
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
+                      async:false,
+                      success : function(data){
+                      }
+              });
+
+              vCnt++;
+            })
+
+            if(vCnt < 1){
+              return;
+            }
+          }
+        }); 
+      }
+
+      let today = new Date();   
+      let hours = today.getHours(); // 시
+      let minutes = today.getMinutes();  // 분
+
+      $("#news").text("작업이 완료 되었습니다." + hours + ':' + minutes);
+
+      if(vFlag){
+        setTimeout(function(){
+          if(vFlag){
+            clickevent();
+          }
+        },300000 + ((Math.floor(Math.random() * 10) + 1) * 1000)) ;
+      }
+    }
+
+    //월초 확정된 기여도가 데이터가 없는 유저들을 대상으로 조회된 총 기여도로 업데이트 진행
+    function clickevent2(){
+      $.ajax({
+                      url : "/user/monUpdate",
+                      type: 'POST',
+                      async:false,
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
+                      success : function(data){
+                        location.reload();
+                      }
+              });
+    }
+
+    //초기화
+    function clickevent3(){
+      $.ajax({
+                      url : "/user/monInit",
+                      type: 'POST',
+                      async:false,
+                      beforeSend : function(xhr)
+                      {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                          xhr.setRequestHeader(header, token);
+                      },
+                      success : function(data){
+                        location.reload();
+                      }
+              });
+    }
+
+    function clickevent4(flag){
+      vFlag = flag;
+      if(flag){
+        $("#btnOk").attr("disabled", true); //설정
+        $("#btnCan").attr("disabled", false); //해제
+        clickevent();
+      }else{
+        $("#btnOk").attr("disabled", false); //설정
+        $("#btnCan").attr("disabled", true); //해제
+      }
+
+    }
+
+    function clickevent5(){
+      for(var vPage = 1; vPage<50; vPage++){
+              /*홈페이지에 접속하여 해당 길드원 정보 추출*/
+        $.ajax({
+          url : "https://maplestory.nexon.com/Common/Guild?gid=35161&wid=43&orderby=0&page="+String(vPage),
+          type: 'GET',
+          crossDomain : true,
+          async:false,
+          success : function(data) {
+            var vCnt = 0;
+
+            var vData = {};
+
+            $(data).find(".rank_table tbody tr").each(function(){
+              vData.GRADE = $(this).find("td:first").text();
+              vData.USER_ID = $(this).find("td:nth-child(2) a").text();
+
+              if(vData.USER_ID=="엘런우드"){
+              var subUrl = $(this).find("td:nth-child(2) a").attr("href");
+              subUrl = subUrl.substring(subUrl.indexOf("p=mik"), subUrl.length);
+
+                $.ajax({
+                        url : "https://maplestory.nexon.com/Common/Character/Detail/%EC%97%98%EB%9F%B0%EC%9A%B0%EB%93%9C/GuildMembers?" + subUrl,
+                        type: 'GET',
+                        async:false,
+                        crossDomain : true,
+                        success : function(data) {
+                          console.log(data);
+                        }
+                });
+
+                return;
+              }
+            });
+          }
+        });
+      }
+    }
+  </script>
+</html>
