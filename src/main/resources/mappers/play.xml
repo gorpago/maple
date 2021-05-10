@@ -15,10 +15,11 @@
                (select USER_ID, LISTAGG(SUB_ID, ',') AS SUB_ID_LIST FROM ht_bella_member GROUP BY USER_ID) B
          WHERE A.USER_ID = B.USER_ID(+)
            AND A.SUB_GRADE IN('달팽이')
-           AND A.USER_ID IN (SELECT ID FROM TEMP)
-           AND A.USER_ID IN (SELECT TRIM(C.USER_ID) FROM NON_MEMBER C)
-           AND A.USER_ID IN (
-                SELECT SUB_ID FROM HT_BELLA_MEMBER HT WHERE HT.USER_ID IN(SELECT ID FROM TEMP))
+           AND A.USER_ID IN (SELECT ID FROM TEMP
+               UNION ALL
+               SELECT TRIM(C.USER_ID) FROM NON_MEMBER C
+               UNION ALL
+               SELECT SUB_ID FROM HT_BELLA_MEMBER HT WHERE HT.USER_ID IN(SELECT ID FROM TEMP))
     </select>
 
     <select id="banList" parameterType="com.maple.bella.model.play"  resultType="com.maple.bella.model.play">
@@ -32,16 +33,16 @@
         SELECT NVL(LISTAGG(A.USER_ID, ', '), '대상자 없음') AS BAN_LIST, COUNT(*) AS BAN_CNT
           FROM mt_bella_member A,
                (select USER_ID, LISTAGG(SUB_ID, ',') AS SUB_ID_LIST FROM ht_bella_member GROUP BY USER_ID) B,
-               (SELECT USER_ID, SUM(CASE WHEN B.ID IS NULL THEN 1 ELSE 0 END) AS BAN_CNT
-                  FROM mt_bella_member A,
-                       (SELECT *
-                          FROM HT_PLAY
-                         WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')) B
+               (
+                SELECT A.USER_ID,
+                       (SELECT COUNT(*) AS CNT FROM  MT_PLAY WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')) - SUM(CASE WHEN B.ID IS NOT NULL THEN 1 ELSE 0 END) AS BAN_CNT
+                  FROM mt_bella_member A, (SELECT * FROM  HT_PLAY WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')) B
                  WHERE A.USER_ID = B.ID(+)
                    AND A.USER_ID NOT IN(
                                         SELECT SUB_ID FROM HT_BELLA_MEMBER
                                         )
-                 GROUP BY USER_ID) C
+                GROUP BY A.USER_ID
+                ) C
         WHERE A.USER_ID = B.USER_ID(+)
           AND A.SUB_GRADE IN('카루타')
           AND A.USER_ID NOT IN(SELECT ID FROM TEMP)
@@ -114,10 +115,13 @@
     </select>
 
     <select id="htList" parameterType="com.maple.bella.model.play"  resultType="com.maple.bella.model.play">
+        WITH TEMP AS (
+            SELECT COUNT(*) AS CNT FROM  MT_PLAY WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = SUBSTR(#{PLAY_DT}, 1, 7)
+        )
         SELECT SUBSTR(#{PLAY_DT}, 1, 7) AS PLAY_DT,
                A.USER_ID AS ID,
                SUM(CASE WHEN B.ID IS NOT NULL THEN 1 ELSE 0 END) AS USE_CNT,
-               SUM(CASE WHEN B.ID IS NULL THEN 1 ELSE 0 END) AS BAN_CNT
+               (SELECT CNT FROM TEMP) - SUM(CASE WHEN B.ID IS NOT NULL THEN 1 ELSE 0 END) AS BAN_CNT
           FROM mt_bella_member A, (SELECT * FROM  HT_PLAY WHERE TO_CHAR(PLAY_DT,'YYYY-MM') = SUBSTR(#{PLAY_DT}, 1, 7)) B
          WHERE A.USER_ID = B.ID(+)
            AND A.USER_ID NOT IN(
