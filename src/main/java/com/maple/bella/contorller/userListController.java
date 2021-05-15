@@ -43,4 +43,10 @@ public class userListController {
         service.monInit();
         return "user/list";
     }
+
+    @PostMapping("/conUpdate")
+    public String conUpdate(Model model){
+        service.conUpdate();
+        return "user/list";
+    }
 }

@@ -3,7 +3,12 @@
 
 <mapper namespace="com.maple.bella.dao.userListDao">
     <select id="selectList" parameterType="com.maple.bella.model.userList"  resultType="com.maple.bella.model.userList">
-        SELECT CASE WHEN GRADE = '마스터' THEN '1'
+        SELECT COUNT(*) OVER() || ' 명' AS TOTAL,
+               SUM(CASE WHEN HOME = 'Y' THEN 1 ELSE 0 END) OVER() || ' 명' AS Y_HOME,
+               SUM(CASE WHEN HOME = 'N' THEN 1 ELSE 0 END) OVER() || ' 명' AS N_HOME,
+               SUM(CASE WHEN NVL(EXP, 0) - NVL(FIRST_EXP, 0) >= 50000 THEN 1 ELSE 0 END) OVER() || ' 명' AS Y_EXP,
+               SUM(CASE WHEN NVL(EXP, 0) - NVL(FIRST_EXP, 0) >= 50000 THEN 0 ELSE 1 END) OVER() || ' 명' AS N_EXP,
+               CASE WHEN GRADE = '마스터' THEN '1'
                     WHEN GRADE = '부마스터' THEN '2'
                     ELSE '3' END AS RANK,
                USER_ID,
@@ -14,12 +19,20 @@
                TOWER,
                MEMBER_CHK,
                SKILL,
+               CON,
+               HOME,
                FN_COMMA(NVL(EXP, 0)) AS EXP,
                FN_COMMA(NVL(FIRST_EXP, 0)) AS FIRST_EXP,
                FN_COMMA(CASE WHEN NVL(EXP, 0) = 0 OR NVL(FIRST_EXP, 0) = 0 THEN 0
                         ELSE NVL(EXP, 0) - NVL(FIRST_EXP, 0) END) AS ING_EXP
           FROM MT_BELLA_MEMBER
     </select>
+
+    <update id="conUpdate">
+        UPDATE MT_BELLA_MEMBER
+           SET CON = 'N',
+               HOME = 'N'
+    </update>
 
     <update id="monUpdate">
         UPDATE MT_BELLA_MEMBER
@@ -62,7 +75,8 @@
         )
         WHEN MATCHED THEN
             UPDATE
-            SET UPDATE_DT = SYSDATE
+            SET CON = 'Y',
+                UPDATE_DT = SYSDATE
             <if test="GRADE != null and GRADE != ''">
                 ,A.GRADE = B.GRADE
             </if>
@@ -74,6 +88,7 @@
             </if>
             <if test="EXP != null and EXP != ''">
                 ,A.EXP = CASE WHEN B.EXP = ' ' OR B.EXP = 0 THEN A.EXP ELSE DECODE(B.EXP, ' ', 0, B.EXP) END
+                ,A.HOME = CASE WHEN B.EXP != ' ' THEN 'Y' ELSE 'N' END
             </if>
             <if test="SUB_GRADE != null and SUB_GRADE != ''">
                 ,A.SUB_GRADE = CASE WHEN B.SUB_GRADE = ' ' THEN A.SUB_GRADE ELSE B.SUB_GRADE END
@@ -84,7 +99,8 @@
         WHEN NOT MATCHED THEN
             INSERT (
                 A.INSERT_DT,
-                A.USER_ID
+                A.USER_ID,
+                A.CON
                 <if test="GRADE != null and GRADE != ''">
                     ,A.GRADE
                 </if>
@@ -102,7 +118,8 @@
                 </if>
             )VALUES(
                 SYSDATE,
-                B.USER_ID
+                B.USER_ID,
+                'Y'
                 <if test="GRADE != null and GRADE != ''">
                     ,B.GRADE
                 </if>
@@ -116,7 +133,7 @@
                     ,B.SKILL
                 </if>
                 <if test="EXP != null and EXP != ''">
-                    ,B.EXP
+                    ,CASE WHEN B.EXP = ' ' OR B.EXP = 0 THEN 0 ELSE DECODE(B.EXP, ' ', 0, B.EXP) END
                 </if>
                 <if test="SUB_GRADE != null and SUB_GRADE != ''">
                     ,B.SUB_GRADE

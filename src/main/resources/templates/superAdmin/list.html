@@ -29,6 +29,18 @@
 
     function clickevent(){
 
+      $.ajax({
+        url : "/user/conUpdate",
+        type: 'POST',
+        async:false,
+        beforeSend : function(xhr)
+        {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+            xhr.setRequestHeader(header, token);
+        },
+        success : function(data){
+        }
+      });
+
       var vStr = "";
 
       for(var vPage = 1; vPage<50; vPage++){
@@ -119,7 +131,6 @@
         setTimeout(function(){
           if(vFlag){
             clickevent();
-            clickevent2();
           }
         },300000 + ((Math.floor(Math.random() * 10) + 1) * 1000)) ;
       }

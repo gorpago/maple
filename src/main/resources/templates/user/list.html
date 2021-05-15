@@ -14,7 +14,23 @@
       <!--
         <iframe id="frmUser" name="frmUser" src="https://maplestory.nexon.com/Common/Character/Detail/%ec%97%98%eb%9f%b0%ec%9a%b0%eb%93%9c/Guild?p=mikO8qgdC4hElCwBGQ6GOx8CmO11EvduZkV0bRbPAhZMLFjnbO74sJiMdpG1aU9VkctmtQk1%2bXxiicNq%2fVnlc%2b9D3jI0eoyVt4WQOJ6jKZXLdFloZ%2f5gtvBMxOZhaeg%2bqq%2fIE1NqHUBOfpBjRDz9MngpsgRfiwwSUei9TKhqPyDNbFKjed3cZxX8l3RT2nh9#a"  width="200px" height="200px">  </iframe>
       -->
-      <div>
+      <div id="TOTAL_TITLE">
+        <span style="font-weight:bold;  font-size:20px;">전체인원: </span>
+        <span id="txtTotal" th:text="${dataList[0].TOTAL}" style="font-size:20px;" ></span>
+
+        <span style="margin-left:30px; font-weight:bold;  font-size:20px;">기여도 5만이상: </span>
+        <span id="txtTop" th:text="${dataList[0].Y_EXP}" style="font-size:20px;"></span>
+
+        <span style="margin-left:30px; font-weight:bold;  font-size:20px;">기여도 5만이하: </span>
+        <span id="txtBottom" th:text="${dataList[0].N_EXP}" style="font-size:20px;"></span>
+
+        <span style="margin-left:30px; font-weight:bold; font-size:20px;">정보공유: </span>
+        <span class="bg-success" style="font-size:20px;">공유</span>
+        <span id="txtOk" style="margin-left:5px; font-size:20px;" th:text="${dataList[0].Y_HOME}"></span>
+        <span class="bg-danger" style="margin-left:20px; font-size:20px;">미공유</span>
+        <span type="text" id="txtDan" style="margin-left:5px; font-size:20px;" th:text="${dataList[0].N_HOME}"></span>
+      </div>
+      <div style="margin-top:50px;">
         <input type="button" value="새로고침" onclick="clickevent2()">
       </div>
       <div style="margin-top:10px;">
@@ -30,7 +46,7 @@
               <th class="text-center">전체 기여도</th>
               <th class="text-center">월초 기여도</th>
               <th class="text-center">월 상승 기여도</th>
-              <th class="text-center">노블스킬 사용</th>
+              <th class="text-center">정보공유</th>
             </tr>
           </thead>
           <tbody>
@@ -44,7 +60,7 @@
               <td class="text-center" th:text="${data.EXP}"></td>
               <td class="text-center" th:text="${data.FIRST_EXP}"></td>
               <td class="text-center" th:text="${data.ING_EXP}"></td>
-              <td class="text-center" th:text="${data.SKILL}"></td>
+              <td class="text-center" th:text="${data.HOME}" th:classappend="${data.HOME} == 'Y'? 'text-success':'text-danger'" style="font-weight:bold;" ></td>
             </tr>
           </tbody>
         </table>
@@ -65,6 +81,13 @@
 		var header = $("meta[name='_csrf_header']").attr("content");
 
     var grid = $('#userGrid').DataTable( {
+      "columnDefs": [
+            {
+                "targets": [ 0 ],
+                "visible": false,
+                "searchable": false
+            }
+        ],
         /*"scrollY": "650px",*/
         select: {
                   style: 'single'

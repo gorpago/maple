@@ -11,4 +11,5 @@ public interface userListDao {
     public void update(userList userModel);
     public void monUpdate();
     public void monInit();
+    public void conUpdate();
 }

@@ -13,3 +13,16 @@ html, body {height:100%;}
 .container{
   background: rgb(69, 64, 88);
 }
+
+.tdRed{
+  background-color: red;
+}
+
+
+.tdYellow{
+  background-color: rgb(94, 255, 0);
+}
+
+#TOTAL_TITLE span{
+  font-size:20px;
+}

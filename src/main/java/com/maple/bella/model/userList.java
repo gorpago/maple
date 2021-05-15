@@ -17,4 +17,11 @@ public class userList {
     private String ING_EXP;
     private String URL;
     private String SUB_GRADE;
+    private String CON;
+    private String HOME;
+    private String TOTAL;
+    private String Y_HOME;
+    private String N_HOME;
+    private String Y_EXP;
+    private String N_EXP;
 }
